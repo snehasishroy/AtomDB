@@ -1,0 +1,100 @@
+.default: &default
+  only:
+    - merge_requests
+    - web
+
+.default_tag: &default_tag
+  tags:
+    - backend-docker-large
+  image: docker.phonepe.com:5000/pp-maven:3.8.4-openjdk-17
+
+stages:
+  - build
+  - quality
+  - deploy_artifactory
+  - deploy_docker
+  - merge
+  - release
+
+merge_ready:
+  stage: quality
+  only:
+    - merge_requests
+  <<: *default_tag
+  before_script:
+    - export MAVEN_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
+  script:
+    - mvn clean install -U -Pquality_check -Dproject.version='CI-TEST-${CI_JOB_ID}-SNAPSHOT' -Dsonar.pullrequest.key=$CI_MERGE_REQUEST_IID -Dsonar.pullrequest.branch=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME -Dsonar.pullrequest.base=$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - cat atomdb-server/target/site/jacoco/index.html
+  artifacts:
+    reports:
+      junit:
+        - atomdb-server/target/surefire-reports/TEST-*.xml
+    expire_in: 2 hrs
+
+build_package:
+  stage: build
+  <<: *default
+  <<: *default_tag
+  when: manual
+  allow_failure: false
+  script:
+    - mvn clean package -U -DskipTests
+  except:
+    - master
+    - develop
+
+deploy_snapshot:
+  stage: deploy_artifactory
+  <<: *default_tag
+  only:
+    - web
+  script:
+    - export MAVEN_OPTS="-Xms1024m -Xmx3072m"
+    - mvn deploy -pl !atomdb-server -DskipTests
+  when: manual
+  allow_failure: false
+
+stage_merge_status:
+  stage: merge
+  <<: *default
+  <<: *default_tag
+  when: manual
+  allow_failure: false
+  script:
+    - git merge-base --is-ancestor $CI_COMMIT_SHA origin/stage
+  only:
+    - merge_requests
+  except:
+    - master
+    - develop
+
+docker_build:
+  stage: deploy_docker
+  <<: *default_tag
+  only:
+    - web
+  script:
+    - mvn -U clean install
+    - cd atomdb-server
+    - export MAVEN_OPTS="-Xms1024m -Xmx3072m"
+    - mvn -U clean compile package docker:build docker:push -Pdocker -DskipTests
+  when: manual
+  allow_failure: false
+
+release:
+  <<: *default_tag
+  stage: release
+  script:
+    - git remote set-url origin "git@gitlab.phonepe.com:${CI_PROJECT_PATH}.git"
+    - git checkout master
+    - git pull
+    - git checkout develop
+    - git pull
+    - mvn -U -Pdocker jgitflow:release-start jgitflow:release-finish
+    - git push --all
+    - git push --tags origin
+  when: manual
+  only:
+    refs:
+      - develop

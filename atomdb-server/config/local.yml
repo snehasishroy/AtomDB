@@ -1,0 +1,139 @@
+server:
+  maxThreads: 128
+  minThreads: 128
+  applicationConnectors:
+    - type: http
+      port: 8080
+  adminConnectors:
+    - type: http
+      port: 8081
+  applicationContextPath: /
+  requestLog:
+    appenders:
+      - type: console
+        timeZone: IST
+
+logging:
+  level: INFO
+  loggers:
+    com.phonepe: INFO
+    org.hibernate: ERROR
+  appenders:
+    - type: console
+      threshold: INFO
+      timeZone: IST
+      logFormat: "%(%-5level) [%date] [%thread] [%logger{0}]: %message%n"
+
+discovery:
+  namespace: phonepe
+  environment: local
+  zookeeper: localhost:2181
+  publishedHost: localhost
+  publishedPort: 8080
+
+eventIngestor:
+  clientId: eventIngestion
+  farmId: NB6
+  environment: stage
+  usingZookeeper: false
+  serviceName: dp-ingestion-api
+  namespace: phonepe
+  clientType: queued
+  queuePath: /tmp/atomdb
+  host: events.nixy.stg-drove.phonepe.nb6
+  port: 80
+
+hystrixConfig:
+  defaultConfig:
+    threadPool:
+      timeout: 2000
+      concurrency: 10
+  commands:
+    - name: SampleClient.sampleMethod
+      threadPool:
+        timeout: 10000
+        concurrency: 10
+
+swagger:
+  title: AtomDb
+  resourcePackage: com.phonepe.platform.atomdb.server.resources
+
+validationConfig:
+  headerValidationConfig:
+    validateRelativePathValue: true
+    headersVsForbiddenRegexList:
+      X-DEVICE-FINGERPRINT:
+        - \+.\/
+        - \.+\\
+  pathValidationConfig:
+    validateHttpRelativePath: true
+    forbiddenRegexList:
+      - \.+\/
+      - \.+\\
+
+sampleAppConfiguration:
+  clientId: sampleService
+  usingZookeeper: false
+  environment: stage
+  host: sampleService.nixy.stg-drove.phonepe.nb6
+  port: 80
+  connections: 10
+  secure: false
+  idleTimeOutSeconds: 30
+  authIssuer: OLYMPUS
+
+olympusIMClientConfig:
+  httpConfig:
+    clientId: olympus
+    usingZookeeper: false
+    host: olympus-im-stage.phonepe.com
+    port: 443
+    secure: true
+    serviceName: olympusIM
+    environment: stage
+    connections: 10
+    idleTimeOutSeconds: 30
+  authConfig:
+    componentId: ATOMDB
+    componentInstanceId: ATOMDB_NB6
+    clientId: ATOMDB_NB6
+    clientKey: fillthisup
+  publicEndpoint: http://localhost:10000
+  authEndpoint: https://olympus-im-stage.phonepe.com
+  resourcePrefix: /olympus/im
+
+reporterConfig:
+  prefix: phonepe.local.atomdb
+  pollingInterval: 30
+  attributes:
+    env: local
+  cluster: atomdb
+  metricServiceConfig:
+    namespace: phonepe
+    logLevel: BASIC
+    zookeeper: stg-appzk001.phonepe.nb6:2181,stg-appzk002.phonepe.nb6:2181,stg-appzk003.phonepe.nb6:2181
+    httpConfiguration:
+      clientId: metricIngestionClient
+      usingZookeeper: false
+      host: metricingestion.nixy.stg-drove.phonepe.nb6
+      serviceName: metricingestion
+      environment: stage
+      connections: 10
+      idleTimeOutSeconds: 30
+  farm: NB6
+
+rangerHubConfiguration:
+  type: ZK
+  namespace: phonepe
+  nodeRefreshTimeMs: 5000
+  hubHost: rangerzk.nixy.stg-drove.phonepe.nb6
+  port: 443
+  secure: true
+  registry:
+    type: SIMPLE
+    host: zeus.nixy.stg-drove.phonepe.nb6
+    port: 443
+    scheme: HTTPS
+    clientId: zeusClientId
+  services: [ ]
+
