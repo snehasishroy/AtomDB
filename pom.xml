@@ -85,7 +85,7 @@
         <hamcrest.version>1.3</hamcrest.version>
         <awaitility.version>3.1.6</awaitility.version>
 
-        <argLine></argLine>
+        <ratis.version>3.1.3</ratis.version>
 
         <!--sonar settings-->
         <sonar.coverage.exclusions>
@@ -269,6 +269,32 @@
             <artifactId>mockito-inline</artifactId>
             <version>${junit.mockito.version}</version>
             <scope>test</scope>
+        </dependency>
+        <!-- Apache Ratis Core Dependencies -->
+        <dependency>
+            <groupId>org.apache.ratis</groupId>
+            <artifactId>ratis-server</artifactId>
+            <version>${ratis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ratis</groupId>
+            <artifactId>ratis-client</artifactId>
+            <version>${ratis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ratis</groupId>
+            <artifactId>ratis-grpc</artifactId>
+            <version>${ratis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ratis</groupId>
+            <artifactId>ratis-metrics-api</artifactId>
+            <version>${ratis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ratis</groupId>
+            <artifactId>ratis-metrics-default</artifactId>
+            <version>${ratis.version}</version>
         </dependency>
     </dependencies>
 
