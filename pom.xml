@@ -296,6 +296,11 @@
             <artifactId>ratis-metrics-default</artifactId>
             <version>${ratis.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.ratis</groupId>
+            <artifactId>ratis-netty</artifactId>
+            <version>${ratis.version}</version>
+        </dependency>
     </dependencies>
 
     <repositories>
