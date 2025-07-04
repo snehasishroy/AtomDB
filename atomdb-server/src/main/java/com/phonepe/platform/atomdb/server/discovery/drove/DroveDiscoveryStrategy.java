@@ -1,6 +1,5 @@
 package com.phonepe.platform.atomdb.server.discovery.drove;
 
-import com.phonepe.platform.atomdb.server.discovery.Address;
 import com.phonepe.platform.atomdb.server.discovery.DiscoveryNode;
 import com.phonepe.platform.atomdb.server.discovery.DiscoveryStrategy;
 import com.phonepe.platform.atomdb.server.discovery.SimpleDiscoveryNode;
@@ -30,6 +29,7 @@ public class DroveDiscoveryStrategy implements DiscoveryStrategy {
     // raft port
     private static final String RAFT_PORT_NAME_ENV_VARIABLE_NAME = "RAFT_PORT";
     private static final String RAFT_PORT_NAME_PROPERTY = "raft.port";
+    public static final String CREATED_AT = "createdAt";
 
     private DroveClient client;
 
@@ -57,20 +57,27 @@ public class DroveDiscoveryStrategy implements DiscoveryStrategy {
     }
 
     @Override
-    public Iterable<DiscoveryNode> discoverNodes() {
+    public List<DiscoveryNode> discoverNodes() {
         List<DroveAddress> peers = client.peers();
         if (!peers.isEmpty()) {
-            log.info("Hazelcast peer list: {}", peers.stream()
-                    .map(address -> address.getHost() + ":" + address.getPort() + "")
+            log.info("Peer list: {}", peers.stream()
+                    .map(address -> address.getHost() + ":" + address.getPort() + ":" + address.getCreatedAt())
                     .toList());
         } else {
             log.warn("Could not fetch peer list.");
         }
         return peers.stream()
-                .map((Address publicAddress) -> {
-                    Map<String, Object> properties = Map.of();
+                .map(address -> {
+                    Map<String, Object> properties = Map.of(CREATED_AT, address.getCreatedAt());
 
-                    return new SimpleDiscoveryNode(publicAddress, properties);
+                    return new SimpleDiscoveryNode(address, properties);
+                })
+                .sorted((o1, o2) -> {
+                    // sort by created at for a fixed ordering
+                    Long o1CreatedAt = (Long) o1.getProperties()
+                            .get(CREATED_AT);
+                    return o1CreatedAt.compareTo((Long) o2.getProperties()
+                            .get(CREATED_AT));
                 })
                 .collect(Collectors.toList());
     }

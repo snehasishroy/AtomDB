@@ -1,8 +1,10 @@
 package com.phonepe.platform.atomdb.server.discovery.drove;
 
 import com.phonepe.platform.atomdb.server.discovery.Address;
+import lombok.Getter;
 
 
+@Getter
 public class DroveAddress extends Address {
 
     long createdAt;
