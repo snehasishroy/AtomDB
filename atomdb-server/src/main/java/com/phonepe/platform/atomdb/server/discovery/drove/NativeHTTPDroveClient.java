@@ -22,6 +22,7 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 @Slf4j
 public class NativeHTTPDroveClient implements DroveClient {
@@ -120,16 +121,22 @@ public class NativeHTTPDroveClient implements DroveClient {
                     JsonNode hostNode = node.at("/localInfo/hostname");
                     JsonNode portNode = node.at("/localInfo/ports/" + portName + "/hostPort");
                     JsonNode createdAtNode = node.at("/created");
-                    if (!hostNode.isMissingNode() && !portNode.isMissingNode() && !createdAtNode.isMissingNode()) {
+                    JsonNode instanceIdNode = node.at("/instanceId");
+                    if (!hostNode.isMissingNode() && !portNode.isMissingNode() && !createdAtNode.isMissingNode()
+                            && !instanceIdNode.isMissingNode()) {
                         String host = hostNode.asText();
                         int port = portNode.asInt();
                         long createdAt = createdAtNode.asLong();
-                        if (null != host && !host.isEmpty() && port != 0 && createdAt != 0) {
-                            log.info("Found node: {}:{}:{}", host, port, createdAt);
-                            addresses.add(new DroveAddress(host, port, createdAt));
+                        String instanceId = instanceIdNode.asText();
+                        if (StringUtils.isNotEmpty(host) && port != 0 && createdAt != 0 && StringUtils.isNotEmpty(
+                                instanceId)) {
+                            log.info("Found node: {}:{}:{}:{}", host, port, createdAt, instanceId);
+                            addresses.add(new DroveAddress(host, port, createdAt, instanceId));
                         } else {
                             log.warn("Invalid address info: host {} port {} createdAt {}", host, port, createdAt);
                         }
+                    } else {
+                        log.error("Missing info in instance node: {}", node);
                     }
                 });
                 return addresses;

@@ -70,14 +70,20 @@ public class DroveDiscoveryStrategy implements DiscoveryStrategy {
                 .map(address -> {
                     Map<String, Object> properties = Map.of(CREATED_AT, address.getCreatedAt());
 
-                    return new SimpleDiscoveryNode(address, properties);
+                    return new SimpleDiscoveryNode(address, address.getInstanceId(), properties);
                 })
                 .sorted((o1, o2) -> {
                     // sort by created at for a fixed ordering
                     Long o1CreatedAt = (Long) o1.getProperties()
                             .get(CREATED_AT);
-                    return o1CreatedAt.compareTo((Long) o2.getProperties()
-                            .get(CREATED_AT));
+                    Long o2CreatedAt = (Long) o2.getProperties()
+                            .get(CREATED_AT);
+                    if (o1CreatedAt.equals(o2CreatedAt)) {
+                        return o1.getNodeId()
+                                .compareTo(o2.getNodeId());
+                    } else {
+                        return o1CreatedAt.compareTo(o2CreatedAt);
+                    }
                 })
                 .collect(Collectors.toList());
     }

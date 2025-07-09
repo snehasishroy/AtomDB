@@ -7,12 +7,15 @@ import lombok.Getter;
 @Getter
 public class DroveAddress extends Address {
 
-    long createdAt;
+    private final long createdAt;
+    private final String instanceId;
 
     public DroveAddress(String host,
                         int port,
-                        long createdAt) {
+                        long createdAt,
+                        String instanceId) {
         super(host, port);
         this.createdAt = createdAt;
+        this.instanceId = instanceId;
     }
 }

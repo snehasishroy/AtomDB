@@ -7,6 +7,7 @@ import lombok.Value;
 public class SimpleDiscoveryNode extends DiscoveryNode {
 
     Address publicAddress;
+    String nodeId;
     Map<String, Object> properties;
 
 }

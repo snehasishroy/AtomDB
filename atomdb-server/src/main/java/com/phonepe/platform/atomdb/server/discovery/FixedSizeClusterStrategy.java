@@ -8,7 +8,7 @@ public class FixedSizeClusterStrategy implements ClusterHealthStrategy {
 
     private final int minSize;
 
-    FixedSizeClusterStrategy(int minSize) {
+    public FixedSizeClusterStrategy(int minSize) {
         this.minSize = minSize;
     }
 
