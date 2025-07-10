@@ -36,7 +36,6 @@ build_package:
   stage: build
   <<: *default
   <<: *default_tag
-  when: manual
   allow_failure: false
   script:
     - mvn clean package -U -DskipTests
@@ -52,7 +51,6 @@ deploy_snapshot:
   script:
     - export MAVEN_OPTS="-Xms1024m -Xmx3072m"
     - mvn deploy -pl !atomdb-server -DskipTests
-  when: manual
   allow_failure: false
 
 stage_merge_status:
@@ -79,7 +77,6 @@ docker_build:
     - cd atomdb-server
     - export MAVEN_OPTS="-Xms1024m -Xmx3072m"
     - mvn -U clean compile package docker:build docker:push -Pdocker -DskipTests
-  when: manual
   allow_failure: false
 
 release:
@@ -94,7 +91,6 @@ release:
     - mvn -U -Pdocker jgitflow:release-start jgitflow:release-finish
     - git push --all
     - git push --tags origin
-  when: manual
   only:
     refs:
       - develop
