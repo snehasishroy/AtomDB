@@ -61,9 +61,10 @@ public class AtomDbApplication extends BaseApplication<AtomDbConfiguration> {
         if (!localConfig) {
             bootstrap.addBundle(configProviderBundle);
         }
-        bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
-                localConfig ? bootstrap.getConfigurationSourceProvider()
-                            : new RoseyConfigSourceProvider(roseyTeamId, configName),
+        bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(localConfig
+                                                                                ? bootstrap.getConfigurationSourceProvider()
+                                                                                : new RoseyConfigSourceProvider(
+                                                                                        roseyTeamId, configName),
                 new EnvironmentVariableSubstitutor()));
         bootstrap.addBundle(new MetricBundle<>());
         bootstrap.addBundle(swaggerBundle());
@@ -76,22 +77,41 @@ public class AtomDbApplication extends BaseApplication<AtomDbConfiguration> {
         bootstrap.addBundle(httpDiscoveryBundle);
         bootstrap.addBundle(requestInfoBundle(httpDiscoveryBundle));
         bootstrap.addBundle(metricIngestionBundle(httpDiscoveryBundle, olympusIMBundle));
-        this.guiceBundle = createGuiceBundle(
-                httpDiscoveryBundle,
-                serviceDiscoveryBundle,
-                configProviderBundle,
-                olympusIMBundle,
-                bootstrap
-        );
+        this.guiceBundle = createGuiceBundle(httpDiscoveryBundle, serviceDiscoveryBundle, configProviderBundle,
+                olympusIMBundle, bootstrap);
         bootstrap.addBundle(guiceBundle);
         bootstrap.addBundle(validationBundle());
+
+        new Thread(AtomDbApplication::startClusterManager).start();
     }
 
     @Override
-    public void run(final AtomDbConfiguration configuration, final Environment environment) {
+    public void run(final AtomDbConfiguration configuration,
+                    final Environment environment) {
         MapperUtils.configureMapper(environment.getObjectMapper());
         HystrixConfigurationFactory.init(configuration.getHystrixConfig());
         FunctionMetricsManager.initialize("commands", environment.metrics());
+    }
+
+    private GuiceBundle createGuiceBundle(HttpDiscoveryBundle<AtomDbConfiguration> discoveryBundle,
+                                          ServiceDiscoveryBundle<AtomDbConfiguration> serviceDiscoveryBundle,
+                                          RoseyConfigProviderBundle<AtomDbConfiguration> roseyConfigProviderBundle,
+                                          OlympusIMBundle<AtomDbConfiguration> olympusIMBundle,
+                                          Bootstrap<AtomDbConfiguration> bootstrap) {
+        return guiceBundle(new ServiceModule(discoveryBundle, serviceDiscoveryBundle, roseyConfigProviderBundle,
+                        bootstrap.getObjectMapper(), bootstrap.getMetricRegistry()), new DBModule(),
+                new CoreModule(olympusIMBundle), new ClientModule(), new ConfigModule());
+    }
+
+    private String getEnv(String name,
+                          String defaultValue) {
+        final var value = System.getenv(name);
+        return Strings.isNullOrEmpty(value)
+               ? defaultValue
+               : value;
+    }
+
+    private static void startClusterManager() {
         DiscoveryStrategy discoveryStrategy = new DroveDiscoveryStrategy();
         ClusterHealthStrategy clusterHealthStrategy = new FixedSizeClusterStrategy(3);
         ClusterService clusterService = new ClusterServiceImpl(discoveryStrategy, clusterHealthStrategy);
@@ -103,29 +123,5 @@ public class AtomDbApplication extends BaseApplication<AtomDbConfiguration> {
         }
     }
 
-    private GuiceBundle createGuiceBundle(
-            HttpDiscoveryBundle<AtomDbConfiguration> discoveryBundle,
-            ServiceDiscoveryBundle<AtomDbConfiguration> serviceDiscoveryBundle,
-            RoseyConfigProviderBundle<AtomDbConfiguration> roseyConfigProviderBundle,
-            OlympusIMBundle<AtomDbConfiguration> olympusIMBundle,
-            Bootstrap<AtomDbConfiguration> bootstrap
-    ) {
-        return guiceBundle(
-                new ServiceModule(
-                        discoveryBundle,
-                        serviceDiscoveryBundle,
-                        roseyConfigProviderBundle,
-                        bootstrap.getObjectMapper(),
-                        bootstrap.getMetricRegistry()),
-                new DBModule(),
-                new CoreModule(olympusIMBundle),
-                new ClientModule(),
-                new ConfigModule()
-        );
-    }
-
-    private String getEnv(String name, String defaultValue) {
-        final var value = System.getenv(name);
-        return Strings.isNullOrEmpty(value) ? defaultValue : value;
-    }
+}
 }
