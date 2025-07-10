@@ -396,7 +396,6 @@
                     <threadCount>10</threadCount>
                     <forkCount>4</forkCount>
                     <reuseForks>true</reuseForks>
-                    <argLine>@{argLine} -Duser.timezone=IST</argLine>
                 </configuration>
             </plugin>
         </plugins>
