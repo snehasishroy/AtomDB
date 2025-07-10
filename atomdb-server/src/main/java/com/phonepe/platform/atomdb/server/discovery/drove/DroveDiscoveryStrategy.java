@@ -27,8 +27,8 @@ public class DroveDiscoveryStrategy implements DiscoveryStrategy {
     private static final String DROVE_ENDPOINTS_PROPERTY = "discovery.drove";
 
     // raft port
-    private static final String RAFT_PORT_NAME_ENV_VARIABLE_NAME = "RAFT_PORT";
-    private static final String RAFT_PORT_NAME_PROPERTY = "raft.port";
+    private static final String RAFT_PORT_NAME_ENV_VARIABLE_NAME = "RAFT_PORT_NAME";
+    private static final String RAFT_PORT_NAME_PROPERTY = "raft.port.name";
     public static final String CREATED_AT = "createdAt";
 
     private DroveClient client;

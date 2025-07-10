@@ -3,6 +3,9 @@ FROM docker.phonepe.com:5000/pp-focal-openjdk-17:1.0.0
 EXPOSE 8080
 EXPOSE 8081
 
+# ratis port
+EXPOSE 9090
+
 VOLUME /var/log/atomdb-server
 
 ADD target/atomdb-server.jar atomdb-server.jar
