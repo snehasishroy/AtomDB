@@ -1,4 +1,5 @@
-FROM docker.phonepe.com:5000/pp-focal-openjdk-17:1.0.0
+FROM docker.phonepe.com/ci/ubuntu/jammy/jdk/openjdk/17/maven/3.9.9:latest
+
 
 EXPOSE 8080
 EXPOSE 8081
