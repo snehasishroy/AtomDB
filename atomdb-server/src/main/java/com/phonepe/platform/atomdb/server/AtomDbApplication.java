@@ -122,6 +122,5 @@ public class AtomDbApplication extends BaseApplication<AtomDbConfiguration> {
             throw new RuntimeException(e);
         }
     }
+}
 
-}
-}
