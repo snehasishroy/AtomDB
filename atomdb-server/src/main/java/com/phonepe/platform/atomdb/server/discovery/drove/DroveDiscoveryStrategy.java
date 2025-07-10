@@ -34,7 +34,7 @@ public class DroveDiscoveryStrategy implements DiscoveryStrategy {
     private DroveClient client;
 
     @SneakyThrows
-    public DroveDiscoveryStrategy(Map<String, Comparable> properties) {
+    public DroveDiscoveryStrategy() {
         start();
     }
 

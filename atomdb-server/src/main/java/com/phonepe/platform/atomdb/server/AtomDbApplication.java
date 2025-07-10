@@ -4,26 +4,29 @@ import com.google.common.base.Strings;
 import com.hystrix.configurator.core.HystrixConfigurationFactory;
 import com.phonepe.data.provider.rosey.bundle.RoseyConfigProviderBundle;
 import com.phonepe.olympus.im.client.OlympusIMBundle;
-import com.phonepe.platform.http.server.metrics.bundle.MetricBundle;
-import com.phonepe.platform.atomdb.server.exception.AppExceptionMapper;
-import com.phonepe.platform.atomdb.server.exception.CustomJsonExceptionMapper;
-import com.phonepe.platform.atomdb.server.exception.GenericExceptionMapper;
-import com.phonepe.platform.atomdb.server.exception.ViolationExceptionMapper;
+import com.phonepe.platform.atomdb.server.discovery.ClusterHealthStrategy;
+import com.phonepe.platform.atomdb.server.discovery.ClusterManager;
+import com.phonepe.platform.atomdb.server.discovery.ClusterService;
+import com.phonepe.platform.atomdb.server.discovery.ClusterServiceImpl;
+import com.phonepe.platform.atomdb.server.discovery.DiscoveryStrategy;
+import com.phonepe.platform.atomdb.server.discovery.FixedSizeClusterStrategy;
+import com.phonepe.platform.atomdb.server.discovery.drove.DroveDiscoveryStrategy;
 import com.phonepe.platform.atomdb.server.guice.ClientModule;
 import com.phonepe.platform.atomdb.server.guice.ConfigModule;
 import com.phonepe.platform.atomdb.server.guice.CoreModule;
 import com.phonepe.platform.atomdb.server.guice.DBModule;
 import com.phonepe.platform.atomdb.server.guice.ServiceModule;
 import com.phonepe.platform.atomdb.server.utils.MapperUtils;
+import com.phonepe.platform.http.server.metrics.bundle.MetricBundle;
 import com.phonepe.platform.http.v2.discovery.HttpDiscoveryBundle;
-import com.phonepe.platform.requestinfo.bundle.RequestInfoBundle;
 import com.phonepe.rosey.dwconfig.RoseyConfigSourceProvider;
-import io.appform.ranger.discovery.bundle.ServiceDiscoveryBundle;
 import io.appform.functionmetrics.FunctionMetricsManager;
+import io.appform.ranger.discovery.bundle.ServiceDiscoveryBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import java.io.IOException;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
 
 public class AtomDbApplication extends BaseApplication<AtomDbConfiguration> {
@@ -89,6 +92,15 @@ public class AtomDbApplication extends BaseApplication<AtomDbConfiguration> {
         MapperUtils.configureMapper(environment.getObjectMapper());
         HystrixConfigurationFactory.init(configuration.getHystrixConfig());
         FunctionMetricsManager.initialize("commands", environment.metrics());
+        DiscoveryStrategy discoveryStrategy = new DroveDiscoveryStrategy();
+        ClusterHealthStrategy clusterHealthStrategy = new FixedSizeClusterStrategy(3);
+        ClusterService clusterService = new ClusterServiceImpl(discoveryStrategy, clusterHealthStrategy);
+        ClusterManager clusterManager = new ClusterManager(clusterService);
+        try {
+            clusterManager.manage();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private GuiceBundle createGuiceBundle(
