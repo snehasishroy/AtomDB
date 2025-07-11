@@ -46,8 +46,7 @@ public class ClusterManager {
             if (candidate.getNodeId()
                     .equals(currentInstanceId)) {
                 RatisDynamicServer ratisServer = new RatisDynamicServer(group, peerId(candidate),
-                        candidate.getPublicAddress()
-                                .getPort());
+                        9090); // port should be 9090 which is exposed in DockerFile
                 ratisServer.start();
             }
         }
